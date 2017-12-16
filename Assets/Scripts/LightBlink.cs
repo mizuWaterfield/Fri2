@@ -20,13 +20,15 @@ public class LightBlink : MonoBehaviour {
     
 
     public float blinkAmp = 4.5f; //点滅の強さ
-    public float blinkSpeed; //点滅の速さ
-    private float theta; //点滅の位相
+
+    public float blinkSpeed; //点滅の速さ rad
+    private float theta; //点滅の位相 rad
 
     public float distThreshold = 1.0f; //同期計算に入れる蛍の最高距離(この距離離れている蛍まで考慮する、ということ)
     public bool isSync = true; // 同期するかしないか
 
     public float transProbability=0.00f; //stopからdepartureへの遷移確率
+    public float numNear = 0.0f;
 
     public List<GameObject> fireFlies; //蛍のリスト
 
@@ -58,7 +60,7 @@ public class LightBlink : MonoBehaviour {
         fireFlies = FireFlyCreator.fireFlies;
 
         //弧度法で点滅の速さ・位相を決める
-        blinkSpeed = RandNormal(0.0f,1.0f) *Mathf.PI/180.0f;
+        blinkSpeed = RandNormal(3.0f,5.0f) *Mathf.PI/180.0f;
         theta = Random.Range(0f, 360f) * Mathf.PI / 180.0f;
 
         //速度の初期化
@@ -74,42 +76,46 @@ public class LightBlink : MonoBehaviour {
         //蛍の点滅の同期を行う
 
         //初期化
-        float tempSum = 0.0f;
-        float tempCnt = 0.0f;
+        float tempSum = 0.0f; //distThreshold以下の距離のホタルとの点滅位相の差の和
+        float tempCnt = 0.0f; //distThreshold以下の距離のホタルの数
 
 
         for (int i = 0; i < fireFlies.Count; i++) {
 
             //ある蛍と自分の距離を計算
             float tempDist = Vector3.Distance(fireFlies[i].transform.position, this.transform.position);
-            
             //他人と自分の位相差をもとに加算　加算するかどうかは距離の大きさによる
             if (tempDist < distThreshold) {
+                float K = (distThreshold - tempDist) / distThreshold; // 距離ごとに加算する位相差に重み付け 近いほど1,限界距離なほど0
                 tempCnt += 1.0f;
-                tempSum += (1.0f + Mathf.Sin(this.theta - fireFlies[i].GetComponent<LightBlink>().GetTheta()))/2.0f; //0~1の範囲になっている
-            
+                tempSum += K * Mathf.Sin(fireFlies[i].GetComponent<LightBlink>().GetTheta() - this.theta); // 位相差を評価関数 K*sin(dTheta)に入れて和を取る
             }
 
         }
+        numNear = tempCnt;
 
         //重みと考慮した蛍の数による係数を乗算
         tempSum *= FireFlyCreator.syncCoefficient / tempCnt;
 
+
         //点滅速度に反映　Time.deltaTimeをかけることにより点滅速度の次元は[rad/s]となる
-        if (isSync){
-            blinkSpeed += tempSum * Time.deltaTime;
-        }
+        //if (isSync){
+        //    blinkSpeed += tempSum * Time.deltaTime;
+        //}
 
         //点滅速度を位相に足す
-        theta += blinkSpeed;
+        //theta += blinkSpeed;
+        theta = theta + blinkSpeed + tempSum;
 
         //位相は0~2piの値を取る
-        if(theta > 2.0f*Mathf.PI){
-            theta = theta - 2.0f*Mathf.PI;
-        }
+        theta %= (2.0f * Mathf.PI);
+        //if(theta > 2.0f*Mathf.PI){
+        //    theta = theta - 2.0f*Mathf.PI;
+        //}
 
         //点滅はシェーダのEmissionで表現している
-        this.GetComponent<Renderer>().material.SetColor("_EmissionColor", new Color(blinkAmp * Mathf.Sin(theta), blinkAmp * Mathf.Sin(theta), 0, 1f));
+        float tempCol = blinkAmp * (1.0f + Mathf.Sin(theta));
+        this.GetComponent<Renderer>().material.SetColor("_EmissionColor", new Color( tempCol, tempCol, 0, 1f));
 
          
 
@@ -175,11 +181,11 @@ public class LightBlink : MonoBehaviour {
                             velocity = (goal - this.transform.position);
 
                             //大きさの調整
-                            velocity /= velocity.magnitude * 5.0f;
+                            velocity /= velocity.magnitude * 10.0f;
                             
                             //遷移
                             NextState = PlayerState.Departure;
-                            }
+                        }
 
                     }
                     break;
@@ -216,27 +222,28 @@ public class LightBlink : MonoBehaviour {
 
         }
 
-        //ステートの実行
-	switch(NowState){
-		case PlayerState.Flying:
-		break;
+            //ステートの実行
+	    switch(NowState){
+		    case PlayerState.Flying:
+		    break;
 
-        case PlayerState.Departure:
-            //加速
-            velocity *= 1.01f;
-        break;
+            case PlayerState.Departure:
+                //加速
+                velocity *= 1.01f;
+            break;
 
-        case PlayerState.Arrival:
-            //減速
-            velocity /= 1.02f;
-        break;
+            case PlayerState.Arrival:
+                //減速
+                velocity /= 1.02f;
+            break;
 
-		case PlayerState.Stop:
+		    case PlayerState.Stop:
 
-		break;
+		    break;
 		
-	}
-}
+	    }
+    }
+
     //位相を返す
     public float GetTheta() {
         return this.theta;
@@ -249,7 +256,7 @@ public class LightBlink : MonoBehaviour {
         return mu + sigma * z;
     }
 		
-	}
+}
 
 
 
