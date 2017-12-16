@@ -34,9 +34,11 @@ public class LightBlink : MonoBehaviour {
 
     private Vector3 goal, currentPosition; //目標とする蛍、自分の現在位置
     private Vector3 velocity = Vector3.zero;//自分の移動速度
-    private float flyingSpeedLimit = .2f; //制限速度
-    private float arrivalThreshold = 10.0f; //減速を始める距離
-    private float stopThreshold = 0.1f; //止まる距離
+    private float flyingSpeedLimit = .18f; //制限速度
+    private float arrivalThreshold = 4.2f; //減速を始める距離
+    private float stopThreshold = 0.11f; //止まる速度
+
+    public LayerMask mask; //レイヤーマスク(RayCast用)
 
 
     
@@ -172,7 +174,8 @@ public class LightBlink : MonoBehaviour {
                         int i = Random.Range(0, fireFlies.Count);
                         
                         //ある程度離れた蛍を目指す　当然自分自身に移動することはありえない
-                        if (Vector3.Distance(fireFlies[i].transform.position, this.transform.position) > arrivalThreshold)
+                        //加速と減速を十分に行うため、arrivalThresholdの2倍が閾値
+                        if (Vector3.Distance(fireFlies[i].transform.position, this.transform.position) > arrivalThreshold*2)
                         {
                             //目標地点を設定
                             goal = fireFlies[i].transform.position;
@@ -180,11 +183,44 @@ public class LightBlink : MonoBehaviour {
                             //速度ベクトルは目標地点に対し平行である
                             velocity = (goal - this.transform.position);
 
-                            //大きさの調整
-                            velocity /= velocity.magnitude * 10.0f;
+                            // Rayの作成
+                            Ray ray = new Ray(this.transform.position, velocity.normalized);
+
+                            // Rayが衝突したコライダーの情報を得る用
+                            RaycastHit hit;
+
+                            //衝突判定
+                            //レイヤーマスクを設定したいなら、第四引数に指定する
+                            if (Physics.Raycast(ray, out hit, Mathf.Infinity,mask))
+                            {
+                                Debug.Log(hit.point);
+                                //障害物までの距離が十分なら飛ぶ
+                                if (hit.distance > arrivalThreshold*2)
+                                {
+                                    goal = hit.point;
+                                    velocity = (goal - this.transform.position);
+
+                                    //大きさの調整
+                                    velocity /= (velocity.magnitude * 10.0f);
+
+                                    
+
+                                    //遷移
+                                    NextState = PlayerState.Departure;
+                                }
+
+                            }
+                            else 
+                            {
+                                //大きさの調整
+                                velocity /= velocity.magnitude * 10.0f;
+
+                                //遷移
+                                NextState = PlayerState.Departure;
                             
-                            //遷移
-                            NextState = PlayerState.Departure;
+                            
+                            }
+                            
                         }
 
                     }
@@ -229,7 +265,7 @@ public class LightBlink : MonoBehaviour {
 
             case PlayerState.Departure:
                 //加速
-                velocity *= 1.01f;
+                velocity *= 1.02f;
             break;
 
             case PlayerState.Arrival:
