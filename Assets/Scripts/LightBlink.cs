@@ -34,7 +34,7 @@ public class LightBlink : MonoBehaviour {
 
     private Vector3 goal, currentPosition; //目標とする蛍、自分の現在位置
     private Vector3 velocity = Vector3.zero;//自分の移動速度
-    private float flyingSpeedLimit = .5f; //制限速度
+    private float flyingSpeedLimit = .2f; //制限速度
     private float arrivalThreshold = 10.0f; //減速を始める距離
     private float stopThreshold = 0.1f; //止まる距離
 
@@ -115,7 +115,7 @@ public class LightBlink : MonoBehaviour {
 
         //点滅はシェーダのEmissionで表現している
         float tempCol = blinkAmp * (1.0f + Mathf.Sin(theta));
-        this.GetComponent<Renderer>().material.SetColor("_EmissionColor", new Color( tempCol, tempCol, 0, 1f));
+        this.GetComponent<Renderer>().material.SetColor("_EmissionColor", new Color( 0.8f*tempCol, tempCol, 0, 1f));
 
          
 
