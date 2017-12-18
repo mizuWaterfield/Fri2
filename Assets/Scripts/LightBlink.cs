@@ -163,6 +163,13 @@ public class LightBlink : MonoBehaviour {
                         //遷移する
                         NextState = PlayerState.Stop;
                     }
+                    if ((goal - currentPosition).magnitude < 1.0f) {
+                        //目標のすぐ近くまで到達したら停止
+                        velocity = Vector3.zero;
+
+                        //遷移する
+                        NextState = PlayerState.Stop;
+                    }
 
                     break;
 
@@ -175,7 +182,7 @@ public class LightBlink : MonoBehaviour {
                         
                         //ある程度離れた蛍を目指す　当然自分自身に移動することはありえない
                         //加速と減速を十分に行うため、arrivalThresholdの2倍が閾値
-                        if (Vector3.Distance(fireFlies[i].transform.position, this.transform.position) > arrivalThreshold*2)
+                        if (Vector3.Distance(fireFlies[i].transform.position, this.transform.position) > arrivalThreshold * 2 && Vector3.Distance(fireFlies[i].transform.position, this.transform.position) < 100f)
                         {
                             //目標地点を設定
                             goal = fireFlies[i].transform.position;
@@ -191,9 +198,9 @@ public class LightBlink : MonoBehaviour {
 
                             //衝突判定
                             //レイヤーマスクを設定したいなら、第四引数に指定する
-                            if (Physics.Raycast(ray, out hit, Mathf.Infinity,mask))
+                            if (Physics.Raycast(ray, out hit, 100f ,mask))
                             {
-                                Debug.Log(hit.point);
+                               
                                 //障害物までの距離が十分なら飛ぶ
                                 if (hit.distance > arrivalThreshold*2)
                                 {
@@ -220,7 +227,6 @@ public class LightBlink : MonoBehaviour {
                             
                             
                             }
-                            
                         }
 
                     }
