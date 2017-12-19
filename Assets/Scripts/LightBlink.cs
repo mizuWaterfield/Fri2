@@ -32,13 +32,13 @@ public class LightBlink : MonoBehaviour {
 
     public List<GameObject> fireFlies; //蛍のリスト
 
-    private Vector3 goal, currentPosition; //目標とする蛍、自分の現在位置
+    public Vector3 goal, currentPosition; //目標とする蛍、自分の現在位置
     private Vector3 velocity = Vector3.zero;//自分の移動速度
     private float flyingSpeedLimit = .18f; //制限速度
     private float arrivalThreshold = 4.2f; //減速を始める距離
-    private float stopThreshold = 0.11f; //止まる速度
+    private float stopThreshold = 0.01f; //止まる速度
 
-    public LayerMask mask; //レイヤーマスク(RayCast用)
+    //public LayerMask mask; //レイヤーマスク(RayCast用)
 
 
     
@@ -46,10 +46,10 @@ public class LightBlink : MonoBehaviour {
     public enum PlayerState
     {
         None = 0,
-        Flying,
-        Departure,
-        Arrival,
-        Stop
+        Flying, // 巡航速度で飛行中
+        Departure, // 加速中
+        Arrival, // 減速中
+        Stop // 静止中
     }
 
     //現在のステートと次のステートを用意
@@ -88,9 +88,19 @@ public class LightBlink : MonoBehaviour {
             float tempDist = Vector3.Distance(fireFlies[i].transform.position, this.transform.position);
             //他人と自分の位相差をもとに加算　加算するかどうかは距離の大きさによる
             if (tempDist < distThreshold) {
-                float K = (distThreshold - tempDist) / distThreshold; // 距離ごとに加算する位相差に重み付け 近いほど1,限界距離なほど0
-                tempCnt += 1.0f;
-                tempSum += K * Mathf.Sin(fireFlies[i].GetComponent<LightBlink>().GetTheta() - this.theta); // 位相差を評価関数 K*sin(dTheta)に入れて和を取る
+                // rayを飛ばして衝突判定があればそのホタルは見えない(ホタルはIgnore Raycastレイヤ)
+                Vector3 direction = (fireFlies[i].transform.position - this.transform.position).normalized;
+                Ray ray = new Ray(this.transform.position, direction);
+                RaycastHit hit;
+                if (Physics.Raycast(ray, out hit, 100f))
+                {   // 見えないホタル
+                    // ノーカウント
+                }else
+                {   // 見えるホタル
+                    float K = (distThreshold - tempDist) / distThreshold; // 距離ごとに加算する位相差に重み付け 近いほど1,限界距離なほど0
+                    tempCnt += 1.0f;
+                    tempSum += K * Mathf.Sin(fireFlies[i].GetComponent<LightBlink>().GetTheta() - this.theta); // 位相差を評価関数 K*sin(dTheta)に入れて和を取る
+                }
             }
 
         }
@@ -134,18 +144,18 @@ public class LightBlink : MonoBehaviour {
         {
             switch (NowState)
             {
-                case PlayerState.Flying:
-                    if ((goal - currentPosition).magnitude < arrivalThreshold){
-                        
-                        //目標に近づいたら遷移
+                case PlayerState.Flying: // 飛行中
+                    // 目標座標が減速開始距離より近ければ
+                    if ((goal - currentPosition).magnitude < arrivalThreshold) {
+                        //減速ステートにはいる
                         NextState = PlayerState.Arrival;
                     }
                     break;
 
-                case PlayerState.Departure:
-                    if((goal - currentPosition).magnitude < arrivalThreshold){
-                        
-                        //目標に近づいたら遷移
+                case PlayerState.Departure: // 加速中
+                    // 目標座標が近ければ
+                    if ((goal - currentPosition).magnitude < arrivalThreshold) {
+                        //減速ステートにはいる
                         NextState = PlayerState.Arrival;
 
                     }else if (velocity.magnitude > flyingSpeedLimit){
@@ -154,27 +164,25 @@ public class LightBlink : MonoBehaviour {
                     }
                     break;
 
-                case PlayerState.Arrival:
+                case PlayerState.Arrival: // 減速中
+                    // 速度が停止速度より小さければ
                     if (velocity.magnitude < stopThreshold) {
-
-                        //目標のすぐ近くまで到達したら停止
+                        // 停止後、停止ステートに移行
                         velocity = Vector3.zero;
-
-                        //遷移する
                         NextState = PlayerState.Stop;
                     }
-                    if ((goal - currentPosition).magnitude < 1.0f) {
-                        //目標のすぐ近くまで到達したら停止
+                    // 目標座標が停止距離より近ければ
+                    if ((goal - currentPosition).magnitude < 1.0f)
+                    {
+                        // 停止後、停止ステートに移行
                         velocity = Vector3.zero;
-
-                        //遷移する
                         NextState = PlayerState.Stop;
                     }
 
                     break;
 
 
-                case PlayerState.Stop:
+                case PlayerState.Stop: // 停止中
 
                     //遷移確率に則り、移動するか判定
                     if (Random.Range(0.0f, 1.0f) <= transProbability) {
@@ -187,46 +195,38 @@ public class LightBlink : MonoBehaviour {
                             //目標地点を設定
                             goal = fireFlies[i].transform.position;
                             
-                            //速度ベクトルは目標地点に対し平行である
-                            velocity = (goal - this.transform.position);
+                            // rayを飛ばす単位方向ベクトルを取得
+                            Vector3 direction = (goal - this.transform.position).normalized;
 
                             // Rayの作成
-                            Ray ray = new Ray(this.transform.position, velocity.normalized);
+                            Ray ray = new Ray(this.transform.position, direction);
 
                             // Rayが衝突したコライダーの情報を得る用
                             RaycastHit hit;
 
-                            //衝突判定
-                            //レイヤーマスクを設定したいなら、第四引数に指定する
-                            if (Physics.Raycast(ray, out hit, 100f ,mask))
+                            // 衝突判定 rayを飛ばして距離100f以内で当たったらその情報がhitに格納される
+                            // レイヤーマスクによってホタル自身はIgnore Raycastにされているので注意
+                            // ヒットしたら
+                            if (Physics.Raycast(ray, out hit, 100f))
                             {
-                               
-                                //障害物までの距離が十分なら飛ぶ
-                                if (hit.distance > arrivalThreshold*2)
-                                {
-                                    goal = hit.point;
-                                    velocity = (goal - this.transform.position);
-
-                                    //大きさの調整
-                                    velocity /= (velocity.magnitude * 10.0f);
-
-                                    
-
-                                    //遷移
-                                    NextState = PlayerState.Departure;
-                                }
-
-                            }
-                            else 
+                                //// 距離が十分なら飛ぶ
+                                //if ( (hit.distance > arrivalThreshold*2))
+                                //{
+                                //    Debug.Log(hit.collider.tag);
+                                //    goal = hit.point;
+                                //    setVelocity(direction * stopThreshold);
+                                //    //ステートを加速に移行
+                                //    NextState = PlayerState.Departure;
+                                //}
+                            }else
                             {
-                                //大きさの調整
-                                velocity /= velocity.magnitude * 10.0f;
-
-                                //遷移
+                                // ヒットしない -> 目標ホタルまで障害物がない
+                                // 速度を与えてステートを加速に移行
+                                setVelocity(direction * stopThreshold);
                                 NextState = PlayerState.Departure;
-                            
-                            
+
                             }
+
                         }
 
                     }
@@ -264,27 +264,22 @@ public class LightBlink : MonoBehaviour {
 
         }
 
-            //ステートの実行
-	    switch(NowState){
-		    case PlayerState.Flying:
-		    break;
-
+        //ステートの実行
+        switch(NowState){
+            case PlayerState.Flying:
+                break;
             case PlayerState.Departure:
                 //加速
-                velocity *= 1.02f;
-            break;
-
+                setVelocity(getVelocity()*1.05f);
+                break;
             case PlayerState.Arrival:
                 //減速
-                velocity /= 1.02f;
-            break;
-
-		    case PlayerState.Stop:
-
-		    break;
-		
-	    }
-    }
+                setVelocity(getVelocity() / 1.05f);
+                break;
+            case PlayerState.Stop:
+                break;
+        }
+    }// update
 
     //位相を返す
     public float GetTheta() {
@@ -297,7 +292,27 @@ public class LightBlink : MonoBehaviour {
         float z = Mathf.Sqrt(-2.0f * Mathf.Log(Random.Range(0.0f, 1.0f))) * Mathf.Sin(2.0f * Mathf.PI * Random.Range(0.0f, 1.0f));
         return mu + sigma * z;
     }
-		
+	
+    // 移動速度を設定
+    // 制限速度オーバーだとセットした時に-1が帰ってくる
+    public int setVelocity(Vector3 v)
+    {
+        if(v.magnitude > flyingSpeedLimit)
+        {
+            this.velocity = this.velocity.normalized * flyingSpeedLimit;
+            return -1;
+        }else
+        {
+            this.velocity = v;
+            return 0;
+        }
+    }
+
+    // 移動速度を取得
+    public Vector3 getVelocity()
+    {
+        return this.velocity;
+    }
 }
 
 
