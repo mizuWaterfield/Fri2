@@ -58,3 +58,4 @@ MonoBehaviour:
   randHeight: 30
   theNumber: 10
   orderAbs: 0
+  orderSigma: 0

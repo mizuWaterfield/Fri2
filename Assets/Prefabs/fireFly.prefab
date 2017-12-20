@@ -25,7 +25,7 @@ GameObject:
   - component: {fileID: 114708489825619732}
   m_Layer: 0
   m_Name: fireFly
-  m_TagString: Untagged
+  m_TagString: FireFly
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -102,6 +102,12 @@ MonoBehaviour:
   transProbability: 0
   numNear: 0
   fireFlies: []
+  goal: {x: 0, y: 0, z: 0}
+  currentPosition: {x: 0, y: 0, z: 0}
+  velocity: {x: 0, y: 0, z: 0}
+  mask:
+    serializedVersion: 2
+    m_Bits: 0
   NowState: 0
   NextState: 0
 --- !u!135 &135106280521031222
