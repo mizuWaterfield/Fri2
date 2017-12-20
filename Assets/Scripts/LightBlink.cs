@@ -34,7 +34,7 @@ public class LightBlink : MonoBehaviour
     public List<GameObject> fireFlies; //蛍のリスト
 
     public Vector3 goal, currentPosition; //目標とする蛍、自分の現在位置
-    private Vector3 velocity = Vector3.zero;//自分の移動速度
+    public Vector3 velocity = Vector3.zero;//自分の移動速度
     private float flyingSpeedLimit = .18f; //制限速度
     private float arrivalThreshold = 4.2f; //減速を始める距離
     private float stopThreshold = 0.01f; //止まる速度
@@ -93,10 +93,10 @@ public class LightBlink : MonoBehaviour
             if (tempDist < distThreshold)
             {
                 // rayを飛ばして衝突判定があればそのホタルは見えない(ホタルはIgnore Raycastレイヤ)
-                Vector3 direction = (fireFlies[i].transform.position - this.transform.position).normalized;
-                Ray ray = new Ray(this.transform.position, direction);
+                Vector3 direction = (fireFlies[i].transform.position - this.transform.position);
+                Ray ray = new Ray(this.transform.position, direction.normalized);
                 RaycastHit hit;
-                if (Physics.Raycast(ray, out hit, 100f))
+                if (Physics.Raycast(ray, out hit, direction.magnitude - 1.0f)) // ホタルまでの距離-1fの間で衝突判定
                 {   // 見えないホタル
                     // ノーカウント
                 }
@@ -207,18 +207,18 @@ public class LightBlink : MonoBehaviour
                             goal = fireFlies[i].transform.position;
 
                             // rayを飛ばす単位方向ベクトルを取得
-                            Vector3 direction = (goal - this.transform.position).normalized;
+                            Vector3 direction = (goal - this.transform.position);
 
                             // Rayの作成
-                            Ray ray = new Ray(this.transform.position, direction);
+                            Ray ray = new Ray(this.transform.position, direction.normalized);
 
                             // Rayが衝突したコライダーの情報を得る用
                             RaycastHit hit;
 
-                            // 衝突判定 rayを飛ばして距離100f以内で当たったらその情報がhitに格納される
+                            // 衝突判定 rayを飛ばして距離差-1f以内で当たったらその情報がhitに格納される
                             // レイヤーマスクによってホタル自身はIgnore Raycastにされているので注意
                             // ヒットしたら
-                            if (Physics.Raycast(ray, out hit, 100f))
+                            if (Physics.Raycast(ray, out hit, direction.magnitude -1f))
                             {
                                 //// 距離が十分なら飛ぶ
                                 //if ( (hit.distance > arrivalThreshold*2))
@@ -234,7 +234,7 @@ public class LightBlink : MonoBehaviour
                             {
                                 // ヒットしない -> 目標ホタルまで障害物がない
                                 // 速度を与えてステートを加速に移行
-                                setVelocity(direction * stopThreshold);
+                                setVelocity(direction.normalized * stopThreshold);
                                 NextState = PlayerState.Departure;
 
                             }
@@ -313,7 +313,7 @@ public class LightBlink : MonoBehaviour
     {
         if (v.magnitude > flyingSpeedLimit)
         {
-            this.velocity = this.velocity.normalized * flyingSpeedLimit;
+            this.velocity = v.normalized * flyingSpeedLimit;
             return -1;
         }
         else

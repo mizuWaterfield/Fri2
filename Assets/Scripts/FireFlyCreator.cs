@@ -39,22 +39,22 @@ public class FireFlyCreator : MonoBehaviour {
 
         fireFlies.Add(fireFly); // コピー元もリストに加える
 
-        for (int i = 0; i < theNumber; i++){
+        for (int i = 0; i < theNumber; i++)
+        {
 
             // 自分の位置から見て指定された範囲内に蛍を複製
             //ffTemp = Instantiate(fireFly, this.transform.position + new Vector3(Random.Range(-randWidth, randWidth), Random.Range(-randDepth,randDepth), Random.Range(-randHeight, randHeight)), Quaternion.identity);
 
-            while (true)
-            {
-                Ray ray = new Ray(this.transform.position+new Vector3(Random.Range(-50,50),Random.Range(-5,5),Random.Range(-50,50)), new Vector3(Random.Range(-1,1),Random.Range(-1,1),Random.Range(-1,1)));
-                RaycastHit hit;
-                if (Physics.Raycast(ray, out hit, 500f)) {
-                    ffTemp = Instantiate(fireFly, hit.point, Quaternion.identity);
-                    Debug.Log(hit.point);
-                    break;
-                }
-
-
+            // 自分の位置から適当にrayを飛ばしてぶつかったところにホタルを作る
+            Vector3 way = new Vector3(Random.Range(-1f, 1f), 0f, Random.Range(-1f, 1f));
+            Ray ray = new Ray(this.transform.position, way); //+new Vector3(Random.Range(-50,50),Random.Range(-5,5),Random.Range(-50,50))
+            RaycastHit hit;
+            if (Physics.Raycast(ray, out hit, 500f))
+            {   // ヒットしたらそこにコピーを作成
+                ffTemp = Instantiate(fireFly, hit.point + new Vector3( 0f, Random.Range(-randDepth, randDepth), 0f) , Quaternion.identity); // 高さをランダムに加算
+            }
+            else
+            {   // ヒットしなかったらなにもしない
             }
 
             //マテリアルを複製し、複製した蛍に適用
