@@ -35,13 +35,28 @@ public class FireFlyCreator : MonoBehaviour {
     // Use this for initialization
     void Start () {
 
+        
+
         fireFlies.Add(fireFly); // コピー元もリストに加える
 
         for (int i = 0; i < theNumber; i++){
 
             // 自分の位置から見て指定された範囲内に蛍を複製
-            ffTemp = Instantiate(fireFly, this.transform.position + new Vector3(Random.Range(-randWidth, randWidth), Random.Range(-randDepth,randDepth), Random.Range(-randHeight, randHeight)), Quaternion.identity);
-            
+            //ffTemp = Instantiate(fireFly, this.transform.position + new Vector3(Random.Range(-randWidth, randWidth), Random.Range(-randDepth,randDepth), Random.Range(-randHeight, randHeight)), Quaternion.identity);
+
+            while (true)
+            {
+                Ray ray = new Ray(this.transform.position+new Vector3(Random.Range(-50,50),Random.Range(-5,5),Random.Range(-50,50)), new Vector3(Random.Range(-1,1),Random.Range(-1,1),Random.Range(-1,1)));
+                RaycastHit hit;
+                if (Physics.Raycast(ray, out hit, 500f)) {
+                    ffTemp = Instantiate(fireFly, hit.point, Quaternion.identity);
+                    Debug.Log(hit.point);
+                    break;
+                }
+
+
+            }
+
             //マテリアルを複製し、複製した蛍に適用
             ffTemp.GetComponent<Renderer>().material = Instantiate(ffMat);
             
