@@ -12,7 +12,8 @@ public class LightBlink : MonoBehaviour
     //蛍の制御
 
     /*
-     departure…指定速度まで加速(ランダムに選んだ蛍の方向へ徐々に加速)、制限速度になったらflyingへ遷移 ただしスタート地点の座標と目標物が近すぎる場合、いきなりarrivalに遷移することもある
+     departure…指定速度まで加速(ランダムに選んだ蛍の方向へ徐々に加速)、制限速度になったらflyingへ遷移
+       ただしスタート地点の座標と目標物が近すぎる場合、いきなりarrivalに遷移することもある
      Flying…惰性運転。なお、途中で目標の蛍は変更しない　目標まで近づいたらarrivalへ遷移
      arrival…徐行(すぐに止まれる)スピードまで減速する　蛍の近くで速度ベクトルを0にし停止。stopへ遷移
      stop…静止状態。毎フレームdepartureに遷移するか判定する
@@ -101,7 +102,8 @@ public class LightBlink : MonoBehaviour
                 {   // 見えるホタル
                     float K = (distThreshold - tempDist) / distThreshold; // 距離ごとに加算する位相差に重み付け 近いほど1,限界距離なほど0
                     tempCnt += 1.0f;
-                    tempSum += K * Mathf.Sin(fireFlies[i].GetComponent<LightBlink>().GetTheta() - this.theta); // 位相差を評価関数 K*sin(dTheta)に入れて和を取る
+                    // 位相差を評価関数 K*sin(dTheta)に入れて和を取る
+                    tempSum += K * Mathf.Sin(fireFlies[i].GetComponent<LightBlink>().GetTheta() - this.theta); 
                 }
             }
 
@@ -188,7 +190,8 @@ public class LightBlink : MonoBehaviour
 
                         //ある程度離れた蛍を目指す　当然自分自身に移動することはありえない
                         //加速と減速を十分に行うため、arrivalThresholdの2倍が閾値
-                        if (Vector3.Distance(fireFlies[i].transform.position, this.transform.position) > arrivalThreshold * 2 && Vector3.Distance(fireFlies[i].transform.position, this.transform.position) < sightLength)
+                        if (Vector3.Distance(fireFlies[i].transform.position, this.transform.position) > arrivalThreshold * 2 
+                                && Vector3.Distance(fireFlies[i].transform.position, this.transform.position) < sightLength)
                         {
                             //目標地点を設定
                             goal = fireFlies[i].transform.position;
