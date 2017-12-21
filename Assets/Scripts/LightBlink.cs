@@ -38,10 +38,7 @@ public class LightBlink : MonoBehaviour
     private float flyingSpeedLimit = .18f; //制限速度
     private float arrivalThreshold = 4.2f; //減速を始める距離
     private float stopThreshold = 0.01f; //止まる速度
-
-    //public LayerMask mask; //レイヤーマスク(RayCast用)
-
-
+    private float sightLength = 300f; //ホタルが他のホタルを視認できる距離(rayの長さなど)
 
     //ステート
     public enum PlayerState
@@ -60,7 +57,7 @@ public class LightBlink : MonoBehaviour
     void Start()
     {
 
-        //you have to use class name to call static member
+        //ステイティックなメンバにアクセスするときはクラス名
         fireFlies = FireFlyCreator.fireFlies;
 
         //弧度法で点滅の速さ・位相を決める
@@ -96,7 +93,11 @@ public class LightBlink : MonoBehaviour
                 Vector3 direction = (fireFlies[i].transform.position - this.transform.position);
                 Ray ray = new Ray(this.transform.position, direction.normalized);
                 RaycastHit hit;
+<<<<<<< HEAD
+                if (Physics.Raycast(ray, out hit, sightLength))
+=======
                 if (Physics.Raycast(ray, out hit, direction.magnitude - 1.0f)) // ホタルまでの距離-1fの間で衝突判定
+>>>>>>> 72bad78fe6e46a639f24b4c6ff288626fd71d4c2
                 {   // 見えないホタル
                     // ノーカウント
                 }
@@ -114,21 +115,11 @@ public class LightBlink : MonoBehaviour
         //重みと考慮した蛍の数による係数を乗算
         tempSum *= FireFlyCreator.syncCoefficient / tempCnt;
 
-
-        //点滅速度に反映　Time.deltaTimeをかけることにより点滅速度の次元は[rad/s]となる
-        //if (isSync){
-        //    blinkSpeed += tempSum * Time.deltaTime;
-        //}
-
         //点滅速度を位相に足す
-        //theta += blinkSpeed;
         theta = theta + blinkSpeed + tempSum;
 
         //位相は0~2piの値を取る
         theta %= (2.0f * Mathf.PI);
-        //if(theta > 2.0f*Mathf.PI){
-        //    theta = theta - 2.0f*Mathf.PI;
-        //}
 
         //点滅はシェーダのEmissionで表現している
         float tempCol = blinkAmp * (1.0f + Mathf.Sin(theta));
@@ -201,7 +192,7 @@ public class LightBlink : MonoBehaviour
 
                         //ある程度離れた蛍を目指す　当然自分自身に移動することはありえない
                         //加速と減速を十分に行うため、arrivalThresholdの2倍が閾値
-                        if (Vector3.Distance(fireFlies[i].transform.position, this.transform.position) > arrivalThreshold * 2 && Vector3.Distance(fireFlies[i].transform.position, this.transform.position) < 100f)
+                        if (Vector3.Distance(fireFlies[i].transform.position, this.transform.position) > arrivalThreshold * 2 && Vector3.Distance(fireFlies[i].transform.position, this.transform.position) < sightLength)
                         {
                             //目標地点を設定
                             goal = fireFlies[i].transform.position;
@@ -215,20 +206,20 @@ public class LightBlink : MonoBehaviour
                             // Rayが衝突したコライダーの情報を得る用
                             RaycastHit hit;
 
+<<<<<<< HEAD
+                            // 衝突判定 rayを飛ばして距離sightLength以内で当たったらその情報がhitに格納される
+                            // レイヤーマスクによってホタル自身はIgnore Raycastにされているので注意
+                            // ヒットしたら
+                            if (Physics.Raycast(ray, out hit, sightLength))
+=======
                             // 衝突判定 rayを飛ばして距離差-1f以内で当たったらその情報がhitに格納される
                             // レイヤーマスクによってホタル自身はIgnore Raycastにされているので注意
                             // ヒットしたら
                             if (Physics.Raycast(ray, out hit, direction.magnitude -1f))
+>>>>>>> 72bad78fe6e46a639f24b4c6ff288626fd71d4c2
                             {
-                                //// 距離が十分なら飛ぶ
-                                //if ( (hit.distance > arrivalThreshold*2))
-                                //{
-                                //    Debug.Log(hit.collider.tag);
-                                //    goal = hit.point;
-                                //    setVelocity(direction * stopThreshold);
-                                //    //ステートを加速に移行
-                                //    NextState = PlayerState.Departure;
-                                //}
+                                //ヒットした -> 障害物あり
+                                //だから見えない
                             }
                             else
                             {
@@ -292,7 +283,7 @@ public class LightBlink : MonoBehaviour
             case PlayerState.Stop:
                 break;
         }
-    }// update
+    }
 
     //位相を返す
     public float GetTheta()
