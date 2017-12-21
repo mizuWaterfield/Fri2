@@ -23,14 +23,8 @@ public class FireFlyCreator : MonoBehaviour {
 
     public int theNumber = 10;
 
-    //秩序変数のための変数
-    private float orderRe,orderIm;
-    public float orderAbs;
+    //同期ぐあいを示す
     public float orderSigma;
-
-    /*このようにマテリアルを複製できる
-        ff_c=Instantiate(ff);
-        */
 
     // Use this for initialization
     void Start () {
@@ -41,13 +35,12 @@ public class FireFlyCreator : MonoBehaviour {
 
         for (int i = 0; i < theNumber; i++){
 
-            // 自分の位置から見て指定された範囲内に蛍を複製
-            //ffTemp = Instantiate(fireFly, this.transform.position + new Vector3(Random.Range(-randWidth, randWidth), Random.Range(-randDepth,randDepth), Random.Range(-randHeight, randHeight)), Quaternion.identity);
-
             while (true)
             {
-                Ray ray = new Ray(this.transform.position+new Vector3(Random.Range(-50,50),Random.Range(-5,5),Random.Range(-50,50)), new Vector3(Random.Range(-1,1),Random.Range(-1,1),Random.Range(-1,1)));
+                //障害物にあたるまで、ランダムな方向へrayを発射し続ける
+                Ray ray = new Ray(this.transform.position+new Vector3(Random.Range(-randWidth,randWidth),Random.Range(-randDepth,randDepth),Random.Range(-randHeight,randHeight)), new Vector3(Random.Range(-1,1),Random.Range(-1,1),Random.Range(-1,1)));
                 RaycastHit hit;
+                //障害物に当たったらそこに生成
                 if (Physics.Raycast(ray, out hit, 500f)) {
                     ffTemp = Instantiate(fireFly, hit.point, Quaternion.identity);
                     Debug.Log(hit.point);
@@ -69,19 +62,14 @@ public class FireFlyCreator : MonoBehaviour {
 	// Update is called once per frame
 
 	void Update () {
-        //秩序変数　orderAbsが大きければ大きいほど同期していることを示す　ほぼデバッグ用
+
         // orderSigmaはtheta値の分散度
         float tempAve = 0f;
         float tempDiffSum = 0f;
-        orderRe = 0f;
-        orderIm = 0f;
-        orderAbs = 0f;
 
         for (int i = 0; i < fireFlies.Count; i++)
         {
             tempAve += fireFlies[i].GetComponent<LightBlink>().GetTheta();
-            orderRe += Mathf.Cos(fireFlies[i].GetComponent<LightBlink>().GetTheta());
-            orderIm += Mathf.Sin(fireFlies[i].GetComponent<LightBlink>().GetTheta());
         }
 
         tempAve = tempAve / fireFlies.Count;
@@ -90,7 +78,6 @@ public class FireFlyCreator : MonoBehaviour {
             tempDiffSum += Mathf.Pow( (fireFlies[i].GetComponent<LightBlink>().GetTheta() - tempAve), 2);
         }
         orderSigma = tempDiffSum / fireFlies.Count;
-        orderAbs = Mathf.Sqrt(orderRe * orderRe + orderIm * orderIm)/fireFlies.Count;
 		
 	}
 
