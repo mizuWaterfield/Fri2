@@ -36,21 +36,6 @@ public class FireFlyCreator : MonoBehaviour {
         for (int i = 0; i < theNumber; i++)
         {
 
-<<<<<<< HEAD
-            while (true)
-            {
-                //障害物にあたるまで、ランダムな方向へrayを発射し続ける
-                Ray ray = new Ray(this.transform.position+new Vector3(Random.Range(-randWidth,randWidth),Random.Range(-randDepth,randDepth),Random.Range(-randHeight,randHeight)), new Vector3(Random.Range(-1,1),Random.Range(-1,1),Random.Range(-1,1)));
-                RaycastHit hit;
-                //障害物に当たったらそこに生成
-                if (Physics.Raycast(ray, out hit, 500f)) {
-                    ffTemp = Instantiate(fireFly, hit.point, Quaternion.identity);
-                    Debug.Log(hit.point);
-                    break;
-                }
-
-
-=======
             // 自分の位置から見て指定された範囲内に蛍を複製
             //ffTemp = Instantiate(fireFly, this.transform.position + new Vector3(Random.Range(-randWidth, randWidth), Random.Range(-randDepth,randDepth), Random.Range(-randHeight, randHeight)), Quaternion.identity);
 
@@ -64,7 +49,6 @@ public class FireFlyCreator : MonoBehaviour {
             }
             else
             {   // ヒットしなかったらなにもしない
->>>>>>> 72bad78fe6e46a639f24b4c6ff288626fd71d4c2
             }
 
             //マテリアルを複製し、複製した蛍に適用
