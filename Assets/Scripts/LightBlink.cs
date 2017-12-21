@@ -93,11 +93,7 @@ public class LightBlink : MonoBehaviour
                 Vector3 direction = (fireFlies[i].transform.position - this.transform.position);
                 Ray ray = new Ray(this.transform.position, direction.normalized);
                 RaycastHit hit;
-<<<<<<< HEAD
-                if (Physics.Raycast(ray, out hit, sightLength))
-=======
                 if (Physics.Raycast(ray, out hit, direction.magnitude - 1.0f)) // ホタルまでの距離-1fの間で衝突判定
->>>>>>> 72bad78fe6e46a639f24b4c6ff288626fd71d4c2
                 {   // 見えないホタル
                     // ノーカウント
                 }
@@ -206,17 +202,10 @@ public class LightBlink : MonoBehaviour
                             // Rayが衝突したコライダーの情報を得る用
                             RaycastHit hit;
 
-<<<<<<< HEAD
-                            // 衝突判定 rayを飛ばして距離sightLength以内で当たったらその情報がhitに格納される
-                            // レイヤーマスクによってホタル自身はIgnore Raycastにされているので注意
-                            // ヒットしたら
-                            if (Physics.Raycast(ray, out hit, sightLength))
-=======
                             // 衝突判定 rayを飛ばして距離差-1f以内で当たったらその情報がhitに格納される
                             // レイヤーマスクによってホタル自身はIgnore Raycastにされているので注意
                             // ヒットしたら
                             if (Physics.Raycast(ray, out hit, direction.magnitude -1f))
->>>>>>> 72bad78fe6e46a639f24b4c6ff288626fd71d4c2
                             {
                                 //ヒットした -> 障害物あり
                                 //だから見えない
