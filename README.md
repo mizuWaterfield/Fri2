@@ -8,3 +8,5 @@
     * `中クリック+移動`でカメラ移動
 * `F1` 情報表示
   * `theta σ` 全ホタルの点滅位相の分散
+* シミュレーション例
+![screenshot](https://github.com/kerokou/Fri2/blob/master/screenshots/picture.png)
